@@ -98,12 +98,6 @@ embedding = GoogleGenerativeAIEmbeddings(
     model = "text-embedding-004",
     google_api_key = os.getenv("GEMINI_API_KEY")
 )
-try:
-    result = embedding.embed_query("Hello")
-    st.write(result)
-    st.write(len(result))
-except Exception as e:
-    st.exception(e)
 text = ""
 history = ""
 
@@ -245,7 +239,7 @@ if user_input and (user_input.text or user_input.files):
         "content" : response
     })     
 
-    with st.chat_message("assistant"):
-        st.write(response)       
+with st.chat_message("assistant"):
+    st.write(response)       
     
         
