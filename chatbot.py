@@ -21,7 +21,7 @@ st.set_page_config(
 
 llm = ChatGroq(
     model = "llama-3.3-70b-versatile",
-    temperature = 0.8,
+    temperature = 0.7,
     api_key = os.getenv("GROQ_API_KEY")
 )
 
@@ -56,6 +56,7 @@ Rules as friend.
     - Understand his emotions by the way te talk.
     - Appreciate him when he/she answer correct.
 Rules as storyteller.
+    - Tell the story only when asked.
     - Tell immersive stories.
     - Keep characters consistent within a single response.
     - Use dialogue.
@@ -221,6 +222,7 @@ full_prompt = f"""
         Current Question:
         {user_input}
 
+        Tell a story only if asked:    
         Main Character:
         {hero}
 
@@ -232,7 +234,7 @@ full_prompt = f"""
     """
 
 with st.spinner("Generating Response..."):
-        response = chain.invoke({"input":full_prompt})
+    response = chain.invoke({"input":full_prompt})
         
 st.session_state.messages.append({
     "role":"assistant",
