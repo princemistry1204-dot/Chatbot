@@ -8,7 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader , Docx2txtLoader , TextLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
 load_dotenv()
@@ -94,11 +95,10 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-embedding = GoogleGenerativeAIEmbeddings(
-    model = "text-embedding-004",
-    google_api_key = os.getenv("GEMINI_API_KEY")
+        
+embedding = HuggingFaceEmbeddings(
+    model_name = "BAAI/BGE-M3",
 )
-text = ""
 history = ""
 
 user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt"],accept_audio=True)
@@ -208,9 +208,9 @@ if user_input and (user_input.text or user_input.files):
     
 
     for message in st.session_state.messages:
-            history += f"{message['role']} : {message['content']}\n"
-    
-    full_prompt = f"""
+        history += f"{message['role']} : {message['content']}\n"
+text = None   
+full_prompt = f"""
     
         Conversation History:
         {history}
@@ -219,7 +219,7 @@ if user_input and (user_input.text or user_input.files):
         {text}
 
         Current Question:
-        {user_input.text}
+        {user_input}
 
         Main Character:
         {hero}
@@ -231,13 +231,13 @@ if user_input and (user_input.text or user_input.files):
         {lang}
     """
 
-    with st.spinner("Generating Response..."):
+with st.spinner("Generating Response..."):
         response = chain.invoke({"input":full_prompt})
-
-    st.session_state.messages.append({
-        "role":"assistant",
-        "content" : response
-    })     
+        
+st.session_state.messages.append({
+    "role":"assistant",
+    "content" : response
+})     
 
 with st.chat_message("assistant"):
     st.write(response)       
