@@ -8,8 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader , Docx2txtLoader , TextLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 load_dotenv()
@@ -96,8 +95,9 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         
-embedding = HuggingFaceEmbeddings(
-    model_name = "BAAI/BGE-M3",
+embedding = GoogleGenerativeAIEmbeddings(
+    model = "embedding-gecko-001",
+    google_api_key = os.getenv("GEMINI_API_KEY")
 )
 history = ""
 
