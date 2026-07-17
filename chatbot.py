@@ -68,7 +68,7 @@ Rules as a docx or txt or pdf reader.
     - Understand what the user attached with the question.
     - Open the file and read it carefully.
     - Understand the context.
-    - Write the question in bigger font.
+    - Display the question in bigger font.
     - Answer the question correctly.
     - Read the file content and answer the question.
     - Generate pdf or docx or txt if user ask to Generate. 
@@ -100,6 +100,7 @@ for message in st.session_state.messages:
 #     model = "google/gemini-embedding-2",
 #     google_api_key = os.getenv("GEMINI_API_KEY")
 # )
+
 history = ""
 text = ""
 user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt"],accept_audio=True)
@@ -133,11 +134,10 @@ if user_input and (user_input.text or user_input.files):
                 loader = PyPDFLoader(temp_path)
             docs = loader.load()
             
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size = 1000,
-                chunk_overlap = 200
-            )
-            
+            # splitter = RecursiveCharacterTextSplitter(
+            #     chunk_size = 1000,
+            #     chunk_overlap = 200
+            # )
             # with st.spinner("Splitting Text"):
             #     chunks = splitter.split_documents(docs)
             # vectorstore = FAISS.from_documents(chunks,embedding)
@@ -158,14 +158,12 @@ if user_input and (user_input.text or user_input.files):
                 loader = Docx2txtLoader(temp_path)
             docs = loader.load()
             
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size = 1000,
-                chunk_overlap = 200
-            )
-            
-            with st.spinner("Splitting Text"):
-                chunks = splitter.split_documents(docs)
-
+            # splitter = RecursiveCharacterTextSplitter(
+            #     chunk_size = 1000,
+            #     chunk_overlap = 200
+            # )
+            # with st.spinner("Splitting Text"):
+            #     chunks = splitter.split_documents(docs)
             # vectorstore = FAISS.from_documents(chunks,embedding)
             # retriver = vectorstore.as_retriever(
             #     search_kwargs = {"k":3}
@@ -184,14 +182,12 @@ if user_input and (user_input.text or user_input.files):
                     loader = TextLoader(temp_path)
             docs = loader.load()
             
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size = 1000,
-                chunk_overlap = 200
-            )
-            
-            with st.spinner("Splitting Text"):
-                chunks = splitter.split_documents(docs)
-            
+            # splitter = RecursiveCharacterTextSplitter(
+            #     chunk_size = 1000,
+            #     chunk_overlap = 200
+            # ) 
+            # with st.spinner("Splitting Text"):
+            #     chunks = splitter.split_documents(docs)
             # vectorestore = FAISS.from_documents(chunks,embedding)
             # retriver = vectorestore.as_retriever(
             #     search_kwargs = {"k":3}
@@ -201,7 +197,7 @@ if user_input and (user_input.text or user_input.files):
             #     docs = retriver.invoke(user_input.text)
             
             text = "\n".join(doc.page_content for doc in docs)
-            
+             
             if os.path.exists(temp_path):
                 os.remove(temp_path)
                 
