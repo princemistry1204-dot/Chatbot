@@ -2,8 +2,10 @@ import streamlit as st
 from dotenv import load_dotenv
 import tempfile
 import os
+from reportlab.pdfgen import canvas
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+# from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader , Docx2txtLoader , TextLoader
 from langchain_core.output_parsers import StrOutputParser
@@ -20,19 +22,17 @@ st.set_page_config(
 )
 
 llm = ChatGroq(
-    model = "llama-3.3-70b-versatile",
-    temperature = 0.7,
-    api_key = os.getenv("GROQ_API_KEY")
+    model="llama-3.3-70b-versatile",
+    temperature=0.7,
+    api_key=os.getenv("GROQ_API_KEY")
 )
-
-
 prompt = ChatPromptTemplate.from_messages(
     [
     
         (
             "system",
             """
-you are a code assistant You'r Name is Jarvis, and a friend, a storyteller, and a file or pdf question answerer.
+you are a code assistant You'r Name is Jarvis, and a friend, a storyteller, and a file or pdf question answerer and Generator.
 
 Rules as assistant.
     - Understand the Question First.
@@ -68,8 +68,10 @@ Rules as a docx or txt or pdf reader.
     - Understand what the user attached with the question.
     - Open the file and read it carefully.
     - Understand the context.
+    - Write the question in bigger font.
     - Answer the question correctly.
     - Read the file content and answer the question.
+    - Generate pdf or docx or txt if user ask to Generate. 
     - Highlight and bold the main topic.
     - Use Diagrams.
 """
@@ -85,8 +87,6 @@ st.write("You'r AI ChatBOT")
 
 st.sidebar.title("Story Settings")
 
-hero = st.sidebar.text_input("Main Characte", "Naruto")
-place = st.sidebar.text_input("Place","Leaf Village")
 lang = st.sidebar.selectbox("Select You'r Language",["English","Hindi","Japaness","Germen","Spanish","Urdu","French"])
 
 if "messages" not in st.session_state:
@@ -96,12 +96,12 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         
-embedding = GoogleGenerativeAIEmbeddings(
-    model = "embedding-gecko-001",
-    google_api_key = os.getenv("GEMINI_API_KEY")
-)
+# embedding = GoogleGenerativeAIEmbeddings(
+#     model = "google/gemini-embedding-2",
+#     google_api_key = os.getenv("GEMINI_API_KEY")
+# )
 history = ""
-
+text = ""
 user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt"],accept_audio=True)
 
 if user_input and (user_input.text or user_input.files):
@@ -112,7 +112,7 @@ if user_input and (user_input.text or user_input.files):
             "role" : "user",
             "content" : user_input.text
         })
-        
+
         
     for file in user_input.files:
         st.write(f"File Atteched : - {file.name}")
@@ -138,15 +138,15 @@ if user_input and (user_input.text or user_input.files):
                 chunk_overlap = 200
             )
             
-            with st.spinner("Splitting Text"):
-                chunks = splitter.split_documents(docs)
-            vectorstore = FAISS.from_documents(chunks,embedding)
-            retriver = vectorstore.as_retriever(
-            search_kwargs = {"k":3}
-            )
+            # with st.spinner("Splitting Text"):
+            #     chunks = splitter.split_documents(docs)
+            # vectorstore = FAISS.from_documents(chunks,embedding)
+            # retriver = vectorstore.as_retriever(
+            # search_kwargs = {"k":3}
+            # )
             
-            with st.spinner("Searching"):
-                docs = retriver.invoke(user_input.text)
+            # with st.spinner("Searching"):
+            #     docs = retriver.invoke(user_input.text)
       
             text = "\n".join(doc.page_content for doc in docs)
                 
@@ -166,13 +166,14 @@ if user_input and (user_input.text or user_input.files):
             with st.spinner("Splitting Text"):
                 chunks = splitter.split_documents(docs)
 
-            vectorstore = FAISS.from_documents(chunks,embedding)
-            retriver = vectorstore.as_retriever(
-                search_kwargs = {"k":3}
-            )           
+            # vectorstore = FAISS.from_documents(chunks,embedding)
+            # retriver = vectorstore.as_retriever(
+            #     search_kwargs = {"k":3}
+            # )           
             
-            with st.spinner("Searching"):
-                docs = retriver.invoke(user_input.text)     
+            # with st.spinner("Searching"):
+            #     docs = retriver.invoke(user_input.text)  
+               
             text = "\n".join(doc.page_content for doc in docs)
             
             if os.path.exists(temp_path):
@@ -191,13 +192,13 @@ if user_input and (user_input.text or user_input.files):
             with st.spinner("Splitting Text"):
                 chunks = splitter.split_documents(docs)
             
-            vectorestore = FAISS.from_documents(chunks,embedding)
-            retriver = vectorestore.as_retriever(
-                search_kwargs = {"k":3}
-            )
+            # vectorestore = FAISS.from_documents(chunks,embedding)
+            # retriver = vectorestore.as_retriever(
+            #     search_kwargs = {"k":3}
+            # )
             
-            with st.spinner("Searching"):
-                docs = retriver.invoke(user_input.text)
+            # with st.spinner("Searching"):
+            #     docs = retriver.invoke(user_input.text)
             
             text = "\n".join(doc.page_content for doc in docs)
             
@@ -210,7 +211,7 @@ if user_input and (user_input.text or user_input.files):
 
     for message in st.session_state.messages:
         history += f"{message['role']} : {message['content']}\n"
-text = None   
+        
 full_prompt = f"""
     
         Conversation History:
@@ -222,26 +223,18 @@ full_prompt = f"""
         Current Question:
         {user_input}
 
-        Tell a story only if asked:    
-        Main Character:
-        {hero}
-
-        Place:
-        {place}
-
         Language:
         {lang}
-    """
+"""
 
 with st.spinner("Generating Response..."):
-    response = chain.invoke({"input":full_prompt})
+        response = chain.invoke({"input":full_prompt})
         
 st.session_state.messages.append({
-    "role":"assistant",
-    "content" : response
-})     
+        "role":"assistant",
+        "content" : response
+    })     
 
 with st.chat_message("assistant"):
-    st.write(response)       
+        st.write(response)       
     
-        
