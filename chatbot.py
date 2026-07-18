@@ -9,9 +9,10 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader , Docx2txtLoader , TextLoader
 from langchain_core.output_parsers import StrOutputParser
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import FAISS
+
+# from langchain_text_splitters import RecursiveCharacterTextSplitter
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+# from langchain_community.vectorstores import FAISS
 
 load_dotenv()
 
@@ -32,7 +33,7 @@ prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             """
-you are a code assistant You'r Name is Jarvis, and a friend, a storyteller, and a file or pdf question answerer and Generator.
+you are a code assistant You'r Name is Jarvis ,image recognizer, and a friend, a storyteller, and a docx , txt or pdf question answerer and Generator.
 
 Rules as assistant.
     - Understand the Question First.
@@ -64,7 +65,7 @@ Rules as storyteller.
     - End with a cliffhanger unless user asks to finish.
     - Never break character.
     - Highlight and bold the main topic.                               
-Rules as a docx or txt or pdf reader.
+Rules as a images recognizer, docx or txt or pdf reader.
     - Understand what the user attached with the question.
     - Open the file and read it carefully.
     - Understand the context.
@@ -83,9 +84,8 @@ Rules as a docx or txt or pdf reader.
 chain = prompt | llm | StrOutputParser()
 
 st.title("AI CHATBOT")
-st.write("You'r AI ChatBOT")
 
-st.sidebar.title("Story Settings")
+st.sidebar.title("Settings")
 
 lang = st.sidebar.selectbox("Select You'r Language",["English","Hindi","Japaness","Germen","Spanish","Urdu","French"])
 
@@ -103,7 +103,8 @@ for message in st.session_state.messages:
 
 history = ""
 text = ""
-user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt"],accept_audio=True)
+img = ""
+user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt","jpg","png"],accept_audio=True)
 
 if user_input and (user_input.text or user_input.files):
     with st.chat_message("user"):
@@ -200,6 +201,20 @@ if user_input and (user_input.text or user_input.files):
              
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+            
+        # elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
+        #     with st.spinner("Loading Image"):
+        #         img = cv2.imread(temp_path)
+        #         st.image(img)
+        #         img = cv2.imread(temp_path)
+        #         img = cv2.resize(img, (224,224))
+        #         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #         img = img / 255.0
+        #         img = np.expand_dims(img, axis=0)
+            
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            
                 
         else:
             pass    
@@ -216,6 +231,9 @@ full_prompt = f"""
         Relevant File Content:
         {text}
 
+        Relevant Image:
+        {img}
+        
         Current Question:
         {user_input}
 
