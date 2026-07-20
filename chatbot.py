@@ -1,3 +1,5 @@
+import keras
+import kagglehub
 import streamlit as st
 from dotenv import load_dotenv
 import tempfile
@@ -9,7 +11,9 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader , Docx2txtLoader , TextLoader
 from langchain_core.output_parsers import StrOutputParser
-
+import tensorflow as tf
+import numpy as np
+import cv2
 # from langchain_text_splitters import RecursiveCharacterTextSplitter
 # from langchain_google_genai import GoogleGenerativeAIEmbeddings
 # from langchain_community.vectorstores import FAISS
@@ -33,7 +37,7 @@ prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             """
-you are a code assistant You'r Name is Jarvis ,image recognizer, and a friend, a storyteller, and a docx , txt or pdf question answerer and Generator.
+Hey Jarvis i'am you'r friend Prince Mistry , you are a code assistant You'r Name is Jarvis ,image recognizer, and a friend, a storyteller, and a docx , txt or pdf question answerer and Generator.
 
 Rules as assistant.
     - Understand the Question First.
@@ -101,10 +105,37 @@ for message in st.session_state.messages:
 #     google_api_key = os.getenv("GEMINI_API_KEY")
 # )
 
+kaggle_dataset = kagglehub.dataset_download(
+    "karimabdulnabi/fruit-classification10-class"
+)
+
+print("Dataset Downloaded Successfully...")
+
+path = os.path.join(kaggle_dataset, "MY_data", "train")
+
+
+train_dataset = tf.keras.utils.image_dataset_from_directory(
+    path,
+    validation_split=0.2,
+    subset="training",
+    seed=100,
+    image_size=(128, 128),
+    batch_size=64
+)
+
+val_dataset = tf.keras.utils.image_dataset_from_directory(
+    path,
+    validation_split=0.2,
+    subset="validation",
+    seed=100,
+    image_size=(128, 128),
+    batch_size=64
+)
+
 history = ""
 text = ""
 img = ""
-user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt","jpg","png"],accept_audio=True)
+user_input = st.chat_input("Ask Anything",accept_file="multiple",file_type=["pdf","docx","txt","jpg","jpeg","png"],accept_audio=True)
 
 if user_input and (user_input.text or user_input.files):
     with st.chat_message("user"):
@@ -202,16 +233,28 @@ if user_input and (user_input.text or user_input.files):
             if os.path.exists(temp_path):
                 os.remove(temp_path)
             
-        # elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
-        #     with st.spinner("Loading Image"):
-        #         img = cv2.imread(temp_path)
-        #         st.image(img)
-        #         img = cv2.imread(temp_path)
-        #         img = cv2.resize(img, (224,224))
-        #         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        #         img = img / 255.0
-        #         img = np.expand_dims(img, axis=0)
+        elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
+            with st.spinner("Image Loading..."):
+                model = tf.keras.models.load_model("Fruit_Image_Classification_model.keras")
             
+            img = cv2.imread(temp_path)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img_resized = cv2.resize(img_rgb, (128, 128))
+            st.image(img_rgb, caption="Uploaded Image")
+
+            img_array = keras.utils.img_to_array(img_resized)
+            img_array = tf.expand_dims(img_array, 0)
+
+            prediction = model.predict(img_array)
+            score = tf.nn.softmax(prediction[0])
+            predicted_index = np.argmax(score)
+            confidence = float(np.max(score))
+
+            predicted_label = train_dataset.class_names[predicted_index]
+            img = f"Fruit detected: {predicted_label} (confidence: {confidence:.1%})" 
+
+            st.write(f"**Prediction:** {predicted_label} ({confidence:.1%} confidence)")
+
             if os.path.exists(temp_path):
                 os.remove(temp_path)
             
