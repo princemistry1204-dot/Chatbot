@@ -8,7 +8,7 @@ import os
 
 def ask_image(file_path: str , question: str):
     with st.spinner("Image Loading..."):
-                    model = tf.keras.models.load_model("Fruit_Image_Classification_model.keras")
+        model = tf.keras.models.load_model("RAG/Fruit_Image_Classification_model.keras")
     # ============================================================
     # IMAGE MODEL DATA (fruit classifier)
     # ============================================================
@@ -48,4 +48,12 @@ def ask_image(file_path: str , question: str):
     st.write(f"**Prediction:** {predicted_label} ({confidence:.1%} confidence)")
     
     if not predicted_label:
-        return "No fruit detected in the image."
+        return "No relevant content found in the image."
+    return f"""
+                Image Prediction:
+                {predicted_label}
+    
+                Confidence:
+                {confidence:.1%}
+            """
+        

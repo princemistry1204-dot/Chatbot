@@ -12,13 +12,12 @@ from langchain_core.output_parsers import StrOutputParser
 from RAG.pdf import ask_pdf
 from RAG.docx import ask_docx
 from RAG.txt import ask_txt
-from RAG.img import ask_images
+from RAG.img import ask_image
 
 # --- Unused / future RAG imports (kept for later) ---
 # from langchain_google_genai import GoogleGenerativeAIEmbeddings
 # from langchain_google_genai import ChatGoogleGenerativeAI
 # from langchain_openai import ChatOpenAI
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 # ============================================================
@@ -120,7 +119,7 @@ if "vectorstore" not in st.session_state:
 # ============================================================
 history = ""
 text = ""
-img = ""
+img_info = ""
 
 user_input = st.chat_input(
     "Ask Anything",
@@ -175,7 +174,7 @@ if user_input and (user_input.text or user_input.files):
 
             # ---------------- IMAGE ----------------
             elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
-                ask_images(temp_path, user_input.text)
+                img_info = ask_image(temp_path, user_input.text)
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
 
@@ -202,7 +201,7 @@ if user_input and (user_input.text or user_input.files):
         {text}
 
         Relevant Image:
-        {img}
+        {img_info}
 
         Current Question:
         {user_input.text}
