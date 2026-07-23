@@ -114,7 +114,9 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        
+
+if "vectorstore" not in st.session_state:
+    st.session_state.vectorstore = None 
 
 # ============================================================
 # IMAGE MODEL DATA (fruit classifier)
