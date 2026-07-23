@@ -12,10 +12,8 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+
+from RAG.pdf import ask_pdf , ask_docx , ask_txt
 
 # --- Unused / future RAG imports (kept for later) ---
 # from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -114,12 +112,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         
-if "vectorstore" not in st.session_state:
-    st.session_state.vectorstore = None
-
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-)
 
 # ============================================================
 # IMAGE MODEL DATA (fruit classifier)
@@ -182,52 +174,20 @@ if user_input and (user_input.text or user_input.files):
 
             # ---------------- PDF ----------------
             if file.name.endswith(".pdf"):
-                with st.spinner("PDF Loading..."):
-                    loader = PyPDFLoader(temp_path)
-                    docs = loader.load()
-
-                # --- Chunking / retrieval, disabled for now ---
-                splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                with st.spinner("Splitting Text"):
-                    chunks = splitter.split_documents(docs)
-                vectorstore = FAISS.from_documents(chunks, embedding)
-                st.session_state.vectorstore = vectorstore
-                text = "\n".join(doc.page_content for doc in docs)
-
+                ask_pdf(temp_path, user_input.text)
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
+                
 
             # ---------------- DOCX ----------------
             elif file.name.endswith(".docx"):
-                with st.spinner("DOCX Loading..."):
-                    loader = Docx2txtLoader(temp_path)
-                    docs = loader.load()
-
-                # --- Chunking / retrieval, disabled for now ---
-                splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                with st.spinner("Splitting Text"):
-                    chunks = splitter.split_documents(docs)
-                vectorstore = FAISS.from_documents(chunks, embedding)
-                st.session_state.vectorstore = vectorstore
-                text = "\n".join(doc.page_content for doc in docs)
-
+                ask_docx(temp_path, user_input.text)
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
 
             # ---------------- TXT ----------------
             elif file.name.endswith(".txt"):
-                with st.spinner("TXT Loading..."):
-                    loader = TextLoader(temp_path)
-                    docs = loader.load()
-
-                # --- Chunking / retrieval, disabled for now ---
-                splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                with st.spinner("Splitting Text"):
-                    chunks = splitter.split_documents(docs)
-                vectorstore = FAISS.from_documents(chunks, embedding)
-                st.session_state.vectorstore = vectorstore
-                text = "\n".join(doc.page_content for doc in docs)
-
+                ask_txt(temp_path, user_input.text)
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
 
