@@ -17,19 +17,15 @@ def ask_txt(file_path: str, question: str):
     
 
     # Reuse the vectorstore across calls instead of rebuilding every time
-    if "vectorstore" not in st.session_state:
-        st.session_state.vectorstore = None
-
-    if st.session_state.vectorstore is None:
-        with st.spinner("PDF Loading..."):
+    with st.spinner("PDF Loading..."):
             loader = TextLoader(file_path)
             docs = loader.load()
 
-        with st.spinner("Splitting Text"):
+    with st.spinner("Splitting Text"):
             splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             chunks = splitter.split_documents(docs)
 
-        with st.spinner("Building vectorstore..."):
+    with st.spinner("Building vectorstore..."):
             st.session_state.vectorstore = FAISS.from_documents(chunks, embedding)
 
     retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 3})
@@ -38,4 +34,4 @@ def ask_txt(file_path: str, question: str):
     if not results:
         return "No relevant content found in the PDF."
 
-    return "\n\n".join(r.page_content for r in results)
+    return "\n\n".join(docs.page_content for docs in results)
