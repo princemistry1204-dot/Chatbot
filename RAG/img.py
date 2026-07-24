@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import streamlit as st
+
 from labels.fruit_labels import fruit_label
 from labels.vehicle_labels import vehicle_labels
 VEHICLE_NAMES = vehicle_labels()
