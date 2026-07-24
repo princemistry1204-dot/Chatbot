@@ -99,8 +99,8 @@ st.title("AI CHATBOT")
 st.sidebar.title("Settings")
 
 lang = st.sidebar.selectbox(
-    "Select You'r Language",
-    ["English", "Hindi", "Japaness", "Germen", "Spanish", "Urdu", "French"],
+    "Select Your Language",
+    ["English", "Hindi", "Japanese", "German", "Spanish", "Urdu", "French"],
 )
 
 if "messages" not in st.session_state:
@@ -117,10 +117,6 @@ if "vectorstore" not in st.session_state:
 # ============================================================
 # MAIN CHAT LOOP
 # ============================================================
-history = ""
-text = ""
-img_info = ""
-
 user_input = st.chat_input(
     "Ask Anything",
     accept_file="multiple",
@@ -129,20 +125,25 @@ user_input = st.chat_input(
 )
 
 if user_input and (user_input.text or user_input.files):
+    user_text = user_input.text.strip() if user_input.text else "Attached file analysis request"
 
     with st.chat_message("user"):
-        st.write(user_input.text)
+        st.write(user_text)
         st.session_state.messages.append({
             "role": "user",
-            "content": user_input.text,
+            "content": user_text,
         })
+
+    text = ""
+    img_info = ""
+    file_results = []
 
     # --------------------------------------------------------
     # Handle attached files
     # --------------------------------------------------------
     if user_input.files:
         for file in user_input.files:
-            st.write(f"File Atteched : - {file.name}")
+            st.write(f"File Attached: {file.name}")
 
             suffix = os.path.splitext(file.name)[1].lower()
             byte_file = file.read()
@@ -151,64 +152,56 @@ if user_input and (user_input.text or user_input.files):
                 temp_path = temp.name
                 temp.write(byte_file)
 
-            response = None
+            try:
+                # ---------------- PDF ----------------
+                if file.name.lower().endswith(".pdf"):
+                    result = ask_pdf(temp_path, user_text)
+                    file_results.append(f"PDF ({file.name}) Content:\n{result}")
 
-            # ---------------- PDF ----------------
-            if file.name.endswith(".pdf"):
-                ask_pdf(temp_path, user_input.text)
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-                
+                # ---------------- DOCX ----------------
+                elif file.name.lower().endswith(".docx"):
+                    result = ask_docx(temp_path, user_text)
+                    file_results.append(f"DOCX ({file.name}) Content:\n{result}")
 
-            # ---------------- DOCX ----------------
-            elif file.name.endswith(".docx"):
-                ask_docx(temp_path, user_input.text)
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+                # ---------------- TXT ----------------
+                elif file.name.lower().endswith(".txt"):
+                    result = ask_txt(temp_path, user_text)
+                    file_results.append(f"TXT ({file.name}) Content:\n{result}")
 
-            # ---------------- TXT ----------------
-            elif file.name.endswith(".txt"):
-                ask_txt(temp_path, user_input.text)
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-
-            # ---------------- IMAGE ----------------
-            elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
-                img_info = ask_image(temp_path, user_input.text)
+                # ---------------- IMAGE ----------------
+                elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
+                    img_result = ask_image(temp_path, user_text)
+                    img_info += f"\nImage ({file.name}):\n{img_result}\n"
+            finally:
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
 
-            else:
-                pass
-            
-    if st.session_state.vectorstore is not None:
-        retriever = st.session_state.vectorstore.as_retriever(
-            search_kwargs={"k": 3})
-            
-        docs = retriever.invoke(user_input.text)
-        text = "\n".join(doc.page_content for doc in docs)
+        if file_results:
+            text = "\n\n".join(file_results)
+
     # --------------------------------------------------------
     # Build conversation history
     # --------------------------------------------------------
-    for message in st.session_state.messages:
-        history += f"{message['role']} : {message['content']}\n"
+    history = ""
+    for msg in st.session_state.messages[:-1]: 
+        history += f"{msg['role']} : {msg['content']}\n"
 
     full_prompt = f"""
-        Conversation History:
-        {history}
+Conversation History:
+{history}
 
-        Relevant File Content:
-        {text}
+Relevant File Content:
+{text}
 
-        Relevant Image:
-        {img_info}
+Relevant Image:
+{img_info}
 
-        Current Question:
-        {user_input.text}
+Current Question:
+{user_text}
 
-        Language:
-        {lang}
-    """
+Language:
+{lang}
+"""
 
     with st.spinner("Generating Response..."):
         response = chain.invoke({"input": full_prompt})

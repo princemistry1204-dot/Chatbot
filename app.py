@@ -1,29 +1,6 @@
-# # import streamlit as st
-# # from langchain_groq import ChatGroq
-# # from dotenv import load_dotenv
-# # import os
-
-# # load_dotenv()
-
-# # llm = ChatGroq(
-# #     model = "llama-3.3-70b-versatile",
-# #     temperature=0.7,
-# #     api_key=os.getenv("GROQ_API_KEY")
-# # )
-
-# # st.title("GROQ CHATBOT")
-
-# # user = st.text_area("Enter You'r Prompt")
-
-# # if st.button("Ask Groq"):
-# #     res = llm.invoke(user)
-# #     st.write(res.content)
-
-
 import os
 from dotenv import load_dotenv
 import streamlit as st
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -37,13 +14,11 @@ st.set_page_config(
     layout="wide"
 )
 
-
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.8
 )
-
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -70,17 +45,14 @@ st.sidebar.title("Story Settings")
 
 genre = st.sidebar.selectbox(
     "Genre",
-    ["Real","Fantasy", "Sci-Fi", "Mystery", "Adventure", "Horror", "Romance", "Historical", "Comedy"]
+    ["Realistic", "Fantasy", "Sci-Fi", "Mystery", "Adventure", "Horror", "Romance", "Historical", "Comedy"]
 )
 
 hero = st.sidebar.text_input("Main Character", "Naruto")
-
 place = st.sidebar.text_input("Place", "Leaf Village")
-
 
 st.title("📖 AI Story Teller")
 st.write("Generate story with conversation memory.")
-
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -91,18 +63,17 @@ for message in st.session_state.messages:
 
 user_input = st.chat_input("Continue the story...")
 
-history = " "
-
-
-for messages in st.session_state.messages:
-    history += f"{message['role']} : {message['content']}" 
-
 if user_input:
-    
+    # Build conversation history before appending the current input
+    history = ""
+    for msg in st.session_state.messages:
+        history += f"{msg['role']}: {msg['content']}\n"
+
     st.session_state.messages.append({
-        "role" : "user",
-        "content" : user_input
+        "role": "user",
+        "content": user_input
     })
+
     with st.chat_message("user"):
         st.write(user_input)
 
@@ -110,7 +81,7 @@ if user_input:
 Create a {genre} story continuation.
 
 Main character: {hero}
-place: {place}
+Place: {place}
 
 Conversation History:
 {history}
@@ -118,16 +89,17 @@ Conversation History:
 User input:
 {user_input}
 """
-    response = chain.invoke({"input":full_prompt})
-    
+
+    with st.spinner("Writing continuation..."):
+        response = chain.invoke({"input": full_prompt})
+
     st.session_state.messages.append({
-        "role" : "assistant",
-        "content" : response
+        "role": "assistant",
+        "content": response
     })
-    
-    
-    
+
     with st.chat_message("assistant"):
         st.write(response)
+
 
     

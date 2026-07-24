@@ -6,32 +6,34 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
 
+def get_embeddings():
+    return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
-def ask_pdf(file_path: str, question: str):
+def ask_pdf(file_path: str, question: str = ""):
     """
-    Loads a PDF, builds/reuses a FAISS vectorstore in session_state,
-    and returns the top-k relevant chunks for the given question.
+    Loads a PDF, builds a FAISS vectorstore, and returns relevant text snippets.
     """
-    embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    
+    embedding = get_embeddings()
 
-    # Reuse the vectorstore across calls instead of rebuilding every time
-    with st.spinner("PDF Loading..."):
-            loader = PyPDFLoader(file_path)
-            docs = loader.load()
+    with st.spinner("Loading PDF..."):
+        loader = PyPDFLoader(file_path)
+        docs = loader.load()
 
-    with st.spinner("Splitting Text"):
-            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-            chunks = splitter.split_documents(docs)
+    with st.spinner("Splitting Text..."):
+        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        chunks = splitter.split_documents(docs)
 
     with st.spinner("Building vectorstore..."):
-            st.session_state.vectorstore = FAISS.from_documents(chunks, embedding)
+        vectorstore = FAISS.from_documents(chunks, embedding)
+        st.session_state.vectorstore = vectorstore
 
-    retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 3})
-    results = retriever.invoke(question)
+    query_text = question if question else "Summarize key points"
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+    results = retriever.invoke(query_text)
 
     if not results:
         return "No relevant content found in the PDF."
 
-    return "\n\n".join(docs.page_content for docs in results)
+    return "\n\n".join(doc.page_content for doc in results)
+

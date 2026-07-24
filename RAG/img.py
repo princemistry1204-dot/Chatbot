@@ -1,35 +1,34 @@
+import os
 import cv2
 import numpy as np
 import tensorflow as tf
 import keras
-import kagglehub
 import streamlit as st
-import os
 
-def ask_image(file_path: str , question: str):
-    with st.spinner("Image Loading..."):
-        model = tf.keras.models.load_model("RAG/Fruit_Image_Classification_model.keras")
-    # ============================================================
-    # IMAGE MODEL DATA (fruit classifier)
-    # ============================================================
-    kaggle_dataset = kagglehub.dataset_download(
-    "karimabdulnabi/fruit-classification10-class"
-    )
-    print("Dataset Downloaded Successfully...")
+# 10 Fruit classes corresponding to the trained model
+CLASS_NAMES = [
+    'Apple', 'Banana', 'avocado', 'cherry', 'kiwi',
+    'mango', 'orange', 'pinenapple', 'strawberries', 'watermelon'
+]
 
-    path = os.path.join(kaggle_dataset, "MY_data", "train")
 
-    train_dataset = tf.keras.utils.image_dataset_from_directory(
-        path,
-        validation_split=0.2,
-        subset="training",
-        seed=100,
-        image_size=(128, 128),
-        batch_size=64,
-    )
+@st.cache_resource
+def load_fruit_model():
+    model_path = os.path.join(os.path.dirname(__file__), "Fruit_Image_Classification_model.keras")
+    if os.path.exists(model_path):
+        return tf.keras.models.load_model(model_path)
+    return None
 
+
+def ask_image(file_path: str, question: str = ""):
+    model = load_fruit_model()
+    if model is None:
+        return "Fruit classification model file not found."
 
     img = cv2.imread(file_path)
+    if img is None:
+        return "Could not read uploaded image."
+
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_resized = cv2.resize(img_rgb, (128, 128))
     st.image(img_rgb, caption="Uploaded Image")
@@ -39,21 +38,10 @@ def ask_image(file_path: str , question: str):
 
     prediction = model.predict(img_array)
     score = tf.nn.softmax(prediction[0])
-    predicted_index = np.argmax(score)
+    predicted_index = int(np.argmax(score))
     confidence = float(np.max(score))
 
-    predicted_label = train_dataset.class_names[predicted_index]
-    img = f"Fruit detected: {predicted_label} (confidence: {confidence:.1%})"
-
+    predicted_label = CLASS_NAMES[predicted_index]
     st.write(f"**Prediction:** {predicted_label} ({confidence:.1%} confidence)")
-    
-    if not predicted_label:
-        return "No relevant content found in the image."
-    return f"""
-                Image Prediction:
-                {predicted_label}
-    
-                Confidence:
-                {confidence:.1%}
-            """
-        
+
+    return f"Image Prediction: {predicted_label} (Confidence: {confidence:.1%})"
