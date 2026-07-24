@@ -134,7 +134,7 @@ if user_input and (user_input.text or user_input.files):
             "content": user_text,
         })
 
-    text = ""
+    context = ""
     img_info = ""
     file_results = []
 
@@ -152,32 +152,38 @@ if user_input and (user_input.text or user_input.files):
                 temp_path = temp.name
                 temp.write(byte_file)
 
-            try:
                 # ---------------- PDF ----------------
                 if file.name.lower().endswith(".pdf"):
                     result = ask_pdf(temp_path, user_text)
                     file_results.append(f"PDF ({file.name}) Content:\n{result}")
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
 
                 # ---------------- DOCX ----------------
                 elif file.name.lower().endswith(".docx"):
                     result = ask_docx(temp_path, user_text)
                     file_results.append(f"DOCX ({file.name}) Content:\n{result}")
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
 
                 # ---------------- TXT ----------------
                 elif file.name.lower().endswith(".txt"):
                     result = ask_txt(temp_path, user_text)
                     file_results.append(f"TXT ({file.name}) Content:\n{result}")
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
 
                 # ---------------- IMAGE ----------------
                 elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
                     img_result = ask_image(temp_path, user_text)
                     img_info += f"\nImage ({file.name}):\n{img_result}\n"
-            finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+                
+                else:
+                    st.write(f"Unsupported file type: {file.name}")
+                
 
         if file_results:
-            text = "\n\n".join(file_results)
+            context = "\n\n".join(file_results)
 
     # --------------------------------------------------------
     # Build conversation history
@@ -191,7 +197,7 @@ Conversation History:
 {history}
 
 Relevant File Content:
-{text}
+{context}
 
 Relevant Image:
 {img_info}
