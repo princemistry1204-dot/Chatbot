@@ -10,7 +10,8 @@ def get_embeddings():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
-def ask_pdf(file_path: str, question: str = ""):
+def ask_pdf(file_path: str, question: str):
+
     """
     Loads a PDF, builds a FAISS vectorstore, and returns relevant text snippets.
     """
@@ -28,12 +29,4 @@ def ask_pdf(file_path: str, question: str = ""):
         vectorstore = FAISS.from_documents(chunks, embedding)
         st.session_state.vectorstore = vectorstore
 
-    query_text = question if question else "Summarize key points"
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    results = retriever.invoke(query_text)
-
-    if not results:
-        return "No relevant content found in the PDF."
-
-    return "\n\n".join(doc.page_content for doc in results)
-
+    return "\n\n".join(doc.page_content for doc in docs)

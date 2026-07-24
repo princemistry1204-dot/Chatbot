@@ -23,13 +23,5 @@ def ask_docx(file_path: str, question: str = ""):
     with st.spinner("Building vectorstore..."):
         vectorstore = FAISS.from_documents(chunks, embedding)
         st.session_state.vectorstore = vectorstore
-
-    query_text = question if question else "Summarize key points"
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    results = retriever.invoke(query_text)
-
-    if not results:
-        return "No relevant content found in the DOCX document."
-
-    return "\n\n".join(doc.page_content for doc in results)
-
+        
+    return "\n\n".join(doc.page_content for doc in docs)
