@@ -184,3 +184,33 @@ def header():
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+def welcome_benner():
+    return st.markdown("""
+            <div class="welcome-hero">
+                <div class="welcome-icon">💬</div>
+                <h3 style="margin: 0; color: #f8fafc; font-weight: 600;">How can Jarvis help you today?</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 6px;">
+                    Ask questions, upload documents for context-aware Q&A, or drop an image for instant analysis.
+                </p>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">💡 General Assistant</div>
+                        <div class="feature-desc">Coding, reasoning, writing, & problem solving</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">📄 Document Analysis</div>
+                        <div class="feature-desc">Attach PDFs, DOCX, or TXT for smart retrieval</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">🖼️ Image Detection</div>
+                        <div class="feature-desc">Upload images for automated classification</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">📊 Smart Tables</div>
+                        <div class="feature-desc">Ask to compare X vs Y for markdown tables</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
