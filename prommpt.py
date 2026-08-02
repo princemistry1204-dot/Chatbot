@@ -89,3 +89,4 @@ def promot():
     something time-sensitive, say so honestly instead of guessing.
     - Respond in the language selected by the user (see the Language field in the prompt).
     """
+    return system_prompt
