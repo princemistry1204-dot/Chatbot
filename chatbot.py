@@ -10,7 +10,7 @@ from RAG.pdf import ask_pdf
 from RAG.docx import ask_docx
 from RAG.txt import ask_txt
 from RAG.img import ask_image
-from RAG.websearch import web_search
+from RAG.websearch import web_search, wiki_search , get_current_datetime
 import prommpt
 from pagestyle import page_layout , header , welcome_benner
 
@@ -37,7 +37,7 @@ llm = ChatGroq(
     max_tokens=512
 )
 
-SYSTEM_PROMPT = prommpt.promot()
+SYSTEM_PROMPT = prommpt.get_system_prompt()
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
@@ -161,10 +161,21 @@ if user_input and (user_input.text or user_input.files):
 
         if file_results:
             text = "\n\n".join(file_results)
-            
-    # ---------------- WEB SEARCH ----------------
-    web_search_result = web_search(user_text)
-    text += "\n\n" + web_search_result
+    
+    # ============================================================
+    # Web Search / Real-Time Information Retrieval
+    NEEDS_SEARCH = ["latest", "current", "today", "news", "recent", "abhi", "aaj"]
+    should_search = any(word in user_text.lower() for word in NEEDS_SEARCH)
+
+    web_search_result = ""
+    wiki_search_result = ""
+    search_results = ""
+
+    if should_search:
+        with st.spinner("Searching the web..."):
+            web_search_result = web_search(user_text)
+            wiki_search_result = wiki_search(user_text)
+            search_results = get_current_datetime()
 
     # Context Retrieval from Active Vectorstore (if present)
     if not text and st.session_state.vectorstore is not None:
@@ -193,6 +204,15 @@ if user_input and (user_input.text or user_input.files):
 
         Current Question:
         {user_text}
+        
+        Recent Web Search Results:
+        {web_search_result}
+
+        Recent Wikipedia Search Results:
+        {wiki_search_result}
+
+        Real-time Internet Search Results:
+        {search_results}
 
         Language:
         {lang}

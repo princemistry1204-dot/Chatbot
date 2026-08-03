@@ -1,12 +1,43 @@
 from langchain_community.tools import DuckDuckGoSearchRun
+# from langchain_tavily import TavilySearch
+from datetime import datetime
+from langchain_community.tools import WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper  
+
 def web_search(query: str) -> str:
-    """Search the internet for current information, facts, or recent events.
-    Args:
-        query: The search query string, e.g. 'python 3.12 release date'
-        question: The user's question for context
-    """
+    """Search the internet for current information, facts, or recent events."""
     try:
         search = DuckDuckGoSearchRun()
         return search.run(query)
     except Exception as e:
         return f"Search failed: {e}"
+
+
+def wiki_search(query: str) -> str:
+    """Search Wikipedia for relevant information."""
+    try:
+        wrapper = WikipediaAPIWrapper()
+        return WikipediaQueryRun(api_wrapper=wrapper).run(query)
+    except Exception as e:
+        return f"Wikipedia search failed: {e}"
+
+
+
+def get_current_datetime():
+    """
+    Returns current date and time information.
+    """
+    now = datetime.now()
+
+    return {
+        "datetime": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "day": now.strftime("%A"),
+        "month": now.strftime("%B"),
+        "year": now.year,
+        "hour": now.hour,
+        "minute": now.minute,
+        "second": now.second,
+        "timezone": now.astimezone().tzname()
+    }
