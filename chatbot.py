@@ -93,7 +93,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-
 # ============================================================
 # MAIN CHAT INPUT & PROCESSING LOOP
 # ============================================================
@@ -149,9 +148,8 @@ if user_input and (user_input.text or user_input.files):
                     file_results.append(f"TXT ({file.name}) Content:\n{result}")
 
                 # ---------------- IMAGE ----------------
-                elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
-                    img_result = ask_image(temp_path, user_text)
-                    img_info += f"\nImage ({file.name}):\n{img_result}\n"
+                elif file.name.endswith((".jpg", ".jpeg", ".png")):
+                    ask_image(temp_path, user_text)
 
             except Exception as e:
                 st.error(f"Error reading {file.name}: {str(e)}")
@@ -178,14 +176,15 @@ if user_input and (user_input.text or user_input.files):
             search_results = get_current_datetime()
 
     # Context Retrieval from Active Vectorstore (if present)
-    if not text and st.session_state.vectorstore is not None:
+    if st.session_state.vectorstore is not None:
         try:
             retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 3})
             docs = retriever.invoke(user_text)
             text = "\n".join(doc.page_content for doc in docs)
         except Exception:
             pass
-
+    
+    
     # Build Conversation History
     history = ""
     for message in st.session_state.messages[:-1]:
