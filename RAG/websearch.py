@@ -40,12 +40,3 @@ def get_current_datetime():
         "second": now.second,
         "timezone": now.astimezone().tzname()
     }
-    
-
-def google_search(query: str) -> str:
-    """Search Google for relevant information."""
-    try:
-        wrapper = googlesearchAPIWrapper()
-        return wrapper.run(query)
-    except Exception as e:
-        return f"Google search failed: {e}"
