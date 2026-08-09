@@ -1,4 +1,4 @@
-from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_community.utilities import google_search
 from datetime import datetime
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper  
@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 def web_search(query: str) -> str:
     """Search the internet for current information, facts, or recent events."""
     try:
-        search = DuckDuckGoSearchRun()
+        search = google_search.GoogleSearchAPIWrapper()
         return search.run(query)
     except Exception as e:
         return f"Search failed: {e}"
