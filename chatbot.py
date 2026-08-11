@@ -10,7 +10,7 @@ from RAG.pdf import ask_pdf
 from RAG.docx import ask_docx
 from RAG.txt import ask_txt
 from RAG.img import ask_image
-from RAG.websearch import web_search, wiki_search , get_current_datetime
+from RAG.websearch import live_search, web_search, wiki_search , get_current_datetime
 import prommpt
 from pagestyle import page_layout , header , welcome_benner
 
@@ -148,8 +148,10 @@ if user_input and (user_input.text or user_input.files):
                     file_results.append(f"TXT ({file.name}) Content:\n{result}")
 
                 # ---------------- IMAGE ----------------
-                elif file.name.endswith((".jpg", ".jpeg", ".png")):
-                    ask_image(temp_path, user_text)
+                elif file.name.lower().endswith((".jpg", ".jpeg", ".png")):
+                    img_result = ask_image(temp_path, user_text)
+                    img_info += f"\nImage ({file.name}):\n{img_result}\n"
+
 
             except Exception as e:
                 st.error(f"Error reading {file.name}: {str(e)}")
@@ -162,18 +164,24 @@ if user_input and (user_input.text or user_input.files):
     
     # ============================================================
     # Web Search / Real-Time Information Retrieval
-    NEEDS_SEARCH = ["latest", "current", "today", "news", "recent", "abhi", "aaj"]
-    should_search = any(word in user_text.lower() for word in NEEDS_SEARCH)
+    GREETINGS = {"hi", "hello", "hey", "namaste", "hola", "sup", "good morning", "good evening", "bye"}
+    clean_prompt = user_text.lower().strip("!?., ")
+
+    should_search = (
+        clean_prompt not in GREETINGS
+        and len(clean_prompt) > 3
+    )
 
     web_search_result = ""
     wiki_search_result = ""
-    search_results = ""
+    current_time_str = ""
 
     if should_search:
-        with st.spinner("Searching the web..."):
-            web_search_result = web_search(user_text)
+        with st.spinner("Searching the web via DuckDuckGo..."):
+            web_search_result = live_search(user_text)
             wiki_search_result = wiki_search(user_text)
-            search_results = get_current_datetime()
+            current_time_str = get_current_datetime()
+
 
     # Context Retrieval from Active Vectorstore (if present)
     if st.session_state.vectorstore is not None:
@@ -183,8 +191,7 @@ if user_input and (user_input.text or user_input.files):
             text = "\n".join(doc.page_content for doc in docs)
         except Exception:
             pass
-    
-    
+
     # Build Conversation History
     history = ""
     for message in st.session_state.messages[:-1]:
@@ -210,8 +217,8 @@ if user_input and (user_input.text or user_input.files):
         Recent Wikipedia Search Results:
         {wiki_search_result}
 
-        Real-time Internet Search Results:
-        {search_results}
+        Current Date & Time:
+        {current_time_str}
 
         Language:
         {lang}
