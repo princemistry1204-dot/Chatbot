@@ -1,5 +1,6 @@
 import re
 import urllib.request
+from duckduckgo_search import DDGS
 import urllib.parse
 from datetime import datetime
 from dotenv import load_dotenv
@@ -57,7 +58,6 @@ def live_search(query: str) -> str:
 
     # Try direct duckduckgo_search library
     try:
-        from duckduckgo_search import DDGS
         with DDGS() as ddgs:
             raw_results = list(ddgs.text(query, max_results=5))
             if raw_results:
