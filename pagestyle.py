@@ -178,7 +178,7 @@ def header():
                 </div>
                 <div class="badge-container">
                     <div class="badge"><div class="status-dot"></div> Online</div>
-                    <div class="badge">⚡ LLaMA 3.3 70B Versatile</div>
+                    <div class="badge">⚡ Gemini Ultra 13B</div>
                     <div class="badge">📄 RAG (PDF, DOCX, TXT)</div>
                     <div class="badge">👁️ Vision Classifier</div>
                 </div>

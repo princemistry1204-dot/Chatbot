@@ -3,6 +3,7 @@ import tempfile
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -30,11 +31,11 @@ st.set_page_config(
 page_style = page_layout()
 
 # Model & Chain Setup
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
     temperature=0.7,
-    api_key=os.getenv("GROQ_API_KEY"),
-    max_tokens=512
+    google_api_key=os.getenv("GEMINI_API_KEY"),
+    max_tokens=1000
 )
 
 SYSTEM_PROMPT = prommpt.get_system_prompt()
